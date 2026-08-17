@@ -20,6 +20,8 @@ pub(crate) fn run_migration(conn: &Connection) -> Result<()> {
     lernset_id     INTEGER NOT NULL,
     origin_meaning TEXT NOT NULL,
     trans_meaning  TEXT NOT NULL,
+    learnstate     TEXT NOT NULL,
+    remaining      INTEGER,
     FOREIGN KEY (lernset_id) REFERENCES lernset(lernset_id) ON DELETE CASCADE
 );")?;
     Ok(())

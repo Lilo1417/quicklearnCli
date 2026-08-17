@@ -1,7 +1,7 @@
 type RemLearns= usize;
 
 #[derive(Debug)]
-enum Learnstate {
+pub enum Learnstate {
     Finished,
     Learning(RemLearns),
     NotStarted
@@ -13,4 +13,5 @@ pub struct Learnitem {
     lernset_id: usize,
     origin_meaning: String,
     trans_meaning: String,
+    learnstate: Learnstate,
 }

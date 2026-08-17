@@ -1,5 +1,5 @@
 mod learnitem;
 mod lernset;
 
-pub use learnitem::Learnitem;
+pub use learnitem::{Learnitem, Learnstate};
 pub use lernset::Lernset;
