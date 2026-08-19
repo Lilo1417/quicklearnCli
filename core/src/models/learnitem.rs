@@ -7,11 +7,21 @@ pub enum Learnstate {
     NotStarted
 }
 
+impl Learnstate {
+    pub(crate) fn to_str(&self) -> &str {
+        match self {
+            Learnstate::Learning(_) => "Learning",
+            Learnstate::NotStarted => "NotStarted",
+            Learnstate::Finished => "Finished"
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Learnitem {
-    learnitem_id: usize,
-    lernset_id: usize,
-    origin_meaning: String,
-    trans_meaning: String,
-    learnstate: Learnstate,
+    pub learnitem_id: usize,
+    pub lernset_id: usize,
+    pub origin_meaning: String,
+    pub trans_meaning: String,
+    pub learnstate: Learnstate,
 }

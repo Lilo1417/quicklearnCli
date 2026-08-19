@@ -1,8 +1,11 @@
-use crate::{Lernset, repository::traits::LernsetRepository};
+use crate::{Lernset, Learnitem, models::Learnstate, LearnitemRepository, LernsetRepository};
 use rusqlite::{Connection, params};
 
 pub struct SqliteLernsetRepository {
     conn: Connection,
+}
+pub struct SqlLIteLearnitemRepository {
+    conn: Connection
 }
 
 impl LernsetRepository for SqliteLernsetRepository {
@@ -53,5 +56,33 @@ impl LernsetRepository for SqliteLernsetRepository {
             lernsets.push(lernset.expect("got no lernsets."));
         }
         Ok(lernsets)
+    }
+}
+
+impl LearnitemRepository for SqlLIteLearnitemRepository {
+    fn create(&self, lernset_id: usize, origin_meaning: String, trans_meaning: String, learnstate: crate::models::Learnstate) -> rusqlite::Result<crate::Learnitem> {
+        let remaining: usize = match learnstate {
+            Learnstate::Learning(rem) => rem,
+            _ => 0
+        };
+        let learnstate_str = learnstate.to_str();
+        self.conn.execute("INSERT INTO learnitem (lernset_id, origin_meaning, trans_meaning, learnstate, remaining) VALUES (?1, ?2, ?3, ?4, ?5)", params![
+            lernset_id as i32,
+            origin_meaning,
+            trans_meaning,
+            learnstate_str,
+            remaining as i32
+        ])?;
+        let new_id = self.conn.last_insert_rowid();
+        Ok(Learnitem {
+            learnitem_id: new_id as usize,
+            lernset_id,
+            origin_meaning,
+            trans_meaning,
+            learnstate
+        })
+    }
+    fn get(&self, learnitem_id: usize) -> rusqlite::Result<Learnitem> {
+        learnitem = 
     }
 }
