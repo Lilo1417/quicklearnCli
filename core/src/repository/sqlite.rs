@@ -83,6 +83,24 @@ impl LearnitemRepository for SqlLIteLearnitemRepository {
         })
     }
     fn get(&self, learnitem_id: usize) -> rusqlite::Result<Learnitem> {
-        learnitem = 
+       self.conn.query_row("SELECT learnitem_id, lernset_id, origin_meaning, trans_meaning, learnstate, remaining FROM learnitem WHERE learnitem_id = (?1)", 
+            params![learnitem_id as i64],
+            |row| {
+                let learnstate = match row.get(4)? as &str {
+                    "Finished" => Learnstate::Finished,
+                    "NotStarted" => Learnstate::NotStarted,
+                    "Learning" => {
+                        let rem = row.get(5)? as usize;
+                        Learnstate::Learning(rem)
+                    }
+                };
+                Ok(Learnitem {
+                    learnitem_id,
+                    lernset_id: row.get(1)? as usize,
+                    origin_meaning: row.get(2)?,
+                    trans_meaning: row.get(3)?,
+                    learnstate,
+                })
+        })
     }
 }
