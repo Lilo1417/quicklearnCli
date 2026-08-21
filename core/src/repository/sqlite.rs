@@ -10,7 +10,7 @@ pub struct SqlLIteLearnitemRepository {
 
 impl LernsetRepository for SqliteLernsetRepository {
     fn create(&self, name: &str) -> rusqlite::Result<crate::Lernset> {
-        self.conn.execute("INSERT INTO lernset (name) VALUES (?1)", params![name]);
+        self.conn.execute("INSERT INTO lernset (name) VALUES (?1)", params![name])?;
         
         let new_id = self.conn.last_insert_rowid();
         Ok(Lernset {
@@ -20,7 +20,7 @@ impl LernsetRepository for SqliteLernsetRepository {
     }
     fn get(&self, id: usize) -> rusqlite::Result<Lernset> {
         self.conn.query_row(
-            "SELECT id, name FROM lernset WHERE id = ?1",
+            "SELECT lernset_id, name FROM lernset WHERE id = ?1",
             [id as i32],
             |row| {
                 let id: i64 = row.get(0)?;
@@ -70,10 +70,7 @@ impl LernsetRepository for SqliteLernsetRepository {
 
 impl LearnitemRepository for SqlLIteLearnitemRepository {
     fn create(&self, lernset_id: usize, origin_meaning: String, trans_meaning: String, learnstate: crate::models::Learnstate) -> rusqlite::Result<crate::Learnitem> {
-        let remaining: usize = match learnstate {
-            Learnstate::Learning(rem) => rem,
-            _ => 0
-        };
+        let remaining = learnstate.remaining();
         let learnstate_str = learnstate.to_str();
         self.conn.execute("INSERT INTO learnitem (lernset_id, origin_meaning, trans_meaning, learnstate, remaining) VALUES (?1, ?2, ?3, ?4, ?5)", params![
             lernset_id as i32,
@@ -111,7 +108,7 @@ impl LearnitemRepository for SqlLIteLearnitemRepository {
     }
     fn delete(&self, id: usize) -> rusqlite::Result<()> {
         let rows_affected = self.conn.execute(
-            "DELETE FROM learnitem WHERE learnitem_id",
+            "DELETE FROM learnitem WHERE learnitem_id = ?1",
             [id as i64]
         )?;
         if rows_affected == 0 {
@@ -141,13 +138,10 @@ impl LearnitemRepository for SqlLIteLearnitemRepository {
         rows.collect::<rusqlite::Result<Vec<_>>>()
     }
     fn update(&self, learnitem: &Learnitem) -> rusqlite::Result<()> {
-        let remaining: usize = match learnitem.learnstate {
-            Learnstate::Learning(rem) => rem,
-            _ => 0
-        };
+        let remaining = learnitem.learnstate.remaining();
         let learnstate_str = learnitem.learnstate.to_str();
         let rows_affected = self.conn.execute(
-            "UPDATE learnitems SET lernset_id = ?1, origin_meaning = ?2, trans_meaning = ?3, learnstate = ?4, remaining = ?5 WHERE learnitem_id = ?6",
+            "UPDATE learnitem SET lernset_id = ?1, origin_meaning = ?2, trans_meaning = ?3, learnstate = ?4, remaining = ?5 WHERE learnitem_id = ?6",
             params![learnitem.lernset_id as i64, learnitem.origin_meaning, learnitem.trans_meaning, learnstate_str, remaining as i64])?;
         if rows_affected == 0 {
             return Err(rusqlite::Error::QueryReturnedNoRows);

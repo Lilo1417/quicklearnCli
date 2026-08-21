@@ -4,15 +4,15 @@ use rusqlite::{Connection, Result};
 
 pub(crate) fn open(path: &Path) -> Result<Connection> {
     let conn = Connection::open(path)?;
-    conn.execute_batch("PRAGMA foreign_key = ON;")?;
+    conn.execute_batch("PRAGMA foreign_keys = ON;")?;
     Ok(conn)
 }
 
 pub(crate) fn run_migration(conn: &Connection) -> Result<()> {
 
-    conn.execute_batch("CREATE TABLE IF NOT EXIST lernset (
+    conn.execute_batch("CREATE TABLE IF NOT EXISTS lernset (
     lernset_id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL
 );")?;
 
     conn.execute_batch("CREATE TABLE IF NOT EXISTS learnitem (

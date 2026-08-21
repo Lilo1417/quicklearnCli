@@ -15,6 +15,12 @@ impl Learnstate {
             Learnstate::Finished => "Finished"
         }
     }
+    pub(crate) fn remaining(&self) -> usize {
+        match self {
+            Learnstate::Learning(rem) => *rem,
+            _ => 0
+        }
+    }
 }
 
 #[derive(Debug)]
