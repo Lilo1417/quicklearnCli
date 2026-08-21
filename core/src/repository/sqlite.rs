@@ -58,6 +58,14 @@ impl LernsetRepository for SqliteLernsetRepository {
         }
         Ok(lernsets)
     }
+    fn update(&self, lernset: &Lernset) -> rusqlite::Result<()> {
+        let rows_affected = self.conn.execute(
+            "UPDATE lernset  SET name = ?1 WHERE lernset_id = ?2", params![lernset.name, lernset.lernset_id as i64])?;
+        if rows_affected == 0 {
+            return Err(rusqlite::Error::QueryReturnedNoRows);
+        }
+        Ok(())
+    }
 }
 
 impl LearnitemRepository for SqlLIteLearnitemRepository {
@@ -131,6 +139,21 @@ impl LearnitemRepository for SqlLIteLearnitemRepository {
                 })
             })?;
         rows.collect::<rusqlite::Result<Vec<_>>>()
+    }
+    fn update(&self, learnitem: &Learnitem) -> rusqlite::Result<()> {
+        let remaining: usize = match learnitem.learnstate {
+            Learnstate::Learning(rem) => rem,
+            _ => 0
+        };
+        let learnstate_str = learnitem.learnstate.to_str();
+        let rows_affected = self.conn.execute(
+            "UPDATE learnitems SET lernset_id = ?1, origin_meaning = ?2, trans_meaning = ?3, learnstate = ?4, remaining = ?5 WHERE learnitem_id = ?6",
+            params![learnitem.lernset_id as i64, learnitem.origin_meaning, learnitem.trans_meaning, learnstate_str, remaining as i64])?;
+        if rows_affected == 0 {
+            return Err(rusqlite::Error::QueryReturnedNoRows);
+        }
+
+        Ok(())
     }
 }
 impl SqlLIteLearnitemRepository {
