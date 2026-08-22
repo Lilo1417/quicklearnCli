@@ -1,5 +1,4 @@
-use rusqlite::Result;
-use crate::{Learnitem, Lernset, models::Learnstate};
+use crate::{core_error::Result, Learnitem, Lernset, models::Learnstate};
 
 pub trait LernsetRepository {
     fn create(&self, name: &str) -> Result<Lernset>;
