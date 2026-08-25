@@ -1,3 +1,4 @@
 pub mod traits;
-mod sqlite;
+pub mod sqlite;
 
+pub use sqlite::{Repository};

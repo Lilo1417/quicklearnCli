@@ -4,4 +4,4 @@ mod repository;
 pub mod core_error;
 
 pub use models::{Lernset, Learnitem};
-pub use repository::traits::{LernsetRepository, LearnitemRepository};
+pub use repository::{traits::{LernsetRepository, LearnitemRepository}, sqlite::{Repository}};

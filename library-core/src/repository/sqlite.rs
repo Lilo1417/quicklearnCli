@@ -1,11 +1,41 @@
-use crate::{core_error::Result, Lernset, Learnitem, models::Learnstate, LearnitemRepository, LernsetRepository};
+use std::path::PathBuf;
+
+use crate::{Learnitem, LearnitemRepository, Lernset, LernsetRepository, core_error::Result, db::open, models::Learnstate};
 use rusqlite::{Connection, params};
 
-pub struct SqliteLernsetRepository {
+pub struct Repository {
+    pub sqlite_lernset: SqliteLernsetRepository,
+    pub sqlite_learnitem: SqlLiteLearnitemRepository,
+}
+impl Repository {
+    pub fn new(path: &PathBuf) -> Self {
+        Repository { sqlite_lernset: SqliteLernsetRepository::new(path), sqlite_learnitem: SqlLiteLearnitemRepository::new(path) }
+    }
+}
+struct SqliteLernsetRepository {
     conn: Connection,
 }
-pub struct SqlLIteLearnitemRepository {
+
+impl SqliteLernsetRepository {
+    pub fn new(path: &PathBuf) -> Self {
+        let conn = match open(&path) {
+            Ok(conn) => conn,
+            Err(err) => panic!("Erro while opening the connection: {}", err)
+        };
+        SqliteLernsetRepository { conn }
+    }
+}
+struct SqlLiteLearnitemRepository {
     conn: Connection
+}
+impl SqlLiteLearnitemRepository {
+    pub fn new(path: &PathBuf) -> Self {
+        let conn = match open(&path) {
+            Ok(conn) => conn,
+            Err(err) => panic!("Erro while opening the connection: {}", err)
+        };
+        SqlLiteLearnitemRepository { conn }
+    }
 }
 
 impl LernsetRepository for SqliteLernsetRepository {
@@ -68,7 +98,7 @@ impl LernsetRepository for SqliteLernsetRepository {
     }
 }
 
-impl LearnitemRepository for SqlLIteLearnitemRepository {
+impl LearnitemRepository for SqlLiteLearnitemRepository {
     fn create(&self, lernset_id: usize, origin_meaning: String, trans_meaning: String, learnstate: crate::models::Learnstate) -> Result<crate::Learnitem> {
         let remaining = learnstate.remaining();
         let learnstate_str = learnstate.to_str();
@@ -94,7 +124,7 @@ impl LearnitemRepository for SqlLIteLearnitemRepository {
             |row| {
                 let state: String = row.get(4)?;
                 let rem: Option<i64> = row.get(5)?;
-                let learnstate = SqlLIteLearnitemRepository::conv_state(state.as_str(), rem)?;
+                let learnstate = SqlLiteLearnitemRepository::conv_state(state.as_str(), rem)?;
 
                 let lern_id: i64 = row.get(1)?;
                 Ok(Learnitem {
@@ -122,7 +152,7 @@ impl LearnitemRepository for SqlLIteLearnitemRepository {
             |row| {
                 let state: String = row.get(4)?;
                 let rem: Option<i64> = row.get(5)?;
-                let learnstate = SqlLIteLearnitemRepository::conv_state(state.as_str(), rem)?;
+                let learnstate = SqlLiteLearnitemRepository::conv_state(state.as_str(), rem)?;
 
                 let row_learnitem_id: i64 = row.get(0)?;
                 let row_lernset_id: i64 = row.get(1)?;
@@ -150,7 +180,7 @@ impl LearnitemRepository for SqlLIteLearnitemRepository {
         Ok(())
     }
 }
-impl SqlLIteLearnitemRepository {
+impl SqlLiteLearnitemRepository {
     fn conv_state(state: &str, rem: Option<i64>) -> rusqlite::Result<Learnstate> {
         match state {
             "Finished" => return Ok(Learnstate::Finished),
