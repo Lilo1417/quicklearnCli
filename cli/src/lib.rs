@@ -41,19 +41,53 @@ pub fn initate_programm(args: args::Args) -> Result<(), std::io::Error> {
     Ok(())
 }
 
-fn get_user_action() -> Result<user_action, std::io::Error> {
+fn get_user_action() -> Result<user_action, String> {
     loop {
         println!("What would you like to do? (help for all options)");
         
         let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
+        match io::stdin().read_line(&mut input) {
+            Ok(_) => (),
+            Err(err) => return Err(err.to_string())
+        };
+
 
         let mut inputs = input.split_whitespace();
         
-        match input.trim().to_lowercase().as_str() {
-            "help" => return Ok(user_action::help),
+        match inputs.next() {
+            Some(input) => match input {
+                "help" => return Ok(user_action::help),
+                "list_lernsets" => return Ok(user_action::list_lernsets),
+                "add_lernset" => return Ok(user_action::add_lernset),
+                "learn_lernset" => return Ok(user_action::learn_lernset),
+                "list_learnitems" => {
+                    let second_input = match convert_str_usize(inputs.next()) {
+                        Ok(input) => input,
+                        Err(err) => return Err(err),
+                    };
+                    return Ok(user_action::list_learnitems(second_input))
+                }
+                "add_learnitems" => {
+                    let second_input = match convert_str_usize(inputs.next()) {
+                        Ok(input) => input,
+                        Err(err) => return Err(err),
+                    };
+                    return Ok(user_action::add_learnitems(second_input))
+                },
+                "quit" => return Ok(user_action::quit),
+                _ => return Err("Please enter a possible command. Type help for possible commands.".to_string())
+            },
+            None => return Err("Please input something valid. Type help for possible commands".to_string())
         }
-
     }
 }
 
+fn convert_str_usize(input: Option<&str>) -> Result<usize, String> {
+    Ok(match input {
+        Some(num) => match num.parse() {
+            Ok(num_usize) => num_usize,
+            Err(err) => return Err(err.to_string())
+        },
+        None => return Err("please enter the lernsetId".to_string())
+    })
+}
