@@ -1,5 +1,5 @@
-mod args;
 mod path;
+pub mod args;
 mod user_actions;
 mod helpers;
 
@@ -12,6 +12,7 @@ use clap::Args;
 
 pub fn initate_programm(args: args::Args) -> Result<usize, std::io::Error> {
     let path = path::get_path(args.database)?;
+    println!("Connecting to: {:?}", path);
     let repo = library_core::Repository::new(&path);
 
     loop {
@@ -23,8 +24,11 @@ pub fn initate_programm(args: args::Args) -> Result<usize, std::io::Error> {
             }
         };
         if action==UserAction::Quit {
+            println!("Exiting program.");
             break;
         }
+
+
     }
     Ok(0)
 }
