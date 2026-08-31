@@ -2,6 +2,7 @@ mod path;
 pub mod args;
 mod user_actions;
 mod helpers;
+mod action_handler;
 
 use user_actions::UserAction; 
 use std::io;
@@ -27,10 +28,7 @@ pub fn initate_programm(args: args::Args) -> Result<usize, std::io::Error> {
             println!("Exiting program.");
             break;
         }
-
-
     }
     Ok(0)
 }
-
 
