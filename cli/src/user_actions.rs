@@ -32,6 +32,7 @@ impl UserAction {
 
 pub fn get_user_action() -> Result<UserAction, String> {
     loop {
+        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
         println!("What would you like to do? (help for all options)");
         
         let mut input = String::new();

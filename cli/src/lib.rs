@@ -16,6 +16,7 @@ pub fn initate_programm(args: args::Args) -> Result<usize, std::io::Error> {
     println!("Connecting to: {:?}", path);
     let repo = library_core::Repository::new(&path);
 
+    print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
     loop {
         let action = match user_actions::get_user_action() {
             Ok(act) => act,
