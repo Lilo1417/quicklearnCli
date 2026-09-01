@@ -5,6 +5,7 @@ use rusqlite::{Connection, Result};
 pub(crate) fn open(path: &Path) -> Result<Connection> {
     let conn = Connection::open(path)?;
     conn.execute_batch("PRAGMA foreign_keys = ON;")?;
+    run_migration(&conn)?;
     Ok(conn)
 }
 

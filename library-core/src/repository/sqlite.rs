@@ -12,7 +12,7 @@ impl Repository {
         Repository { sqlite_lernset: SqliteLernsetRepository::new(path), sqlite_learnitem: SqlLiteLearnitemRepository::new(path) }
     }
 }
-struct SqliteLernsetRepository {
+pub struct SqliteLernsetRepository {
     conn: Connection,
 }
 
@@ -25,7 +25,7 @@ impl SqliteLernsetRepository {
         SqliteLernsetRepository { conn }
     }
 }
-struct SqlLiteLearnitemRepository {
+pub struct SqlLiteLearnitemRepository {
     conn: Connection
 }
 impl SqlLiteLearnitemRepository {

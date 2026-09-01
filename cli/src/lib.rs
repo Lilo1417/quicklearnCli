@@ -29,6 +29,9 @@ pub fn initate_programm(args: args::Args) -> Result<usize, std::io::Error> {
             println!("Exiting program.");
             break;
         }
+        else {
+            action_handler::handle_action(action, &repo);
+        }
     }
     Ok(0)
 }
