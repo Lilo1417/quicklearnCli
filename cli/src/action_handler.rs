@@ -3,7 +3,7 @@ use std::io;
 use crate::user_actions::{self, UserAction};
 use library_core::{self, LernsetRepository};
 
-pub fn handle_action(ua: UserAction, repo: &library_core::Repository) -> Result<usize, std::io::Error> {
+pub fn handle_action(ua: UserAction, repo: &library_core::Repository) -> Result<usize, library_core::core_error::CoreError> {
     match ua {
         UserAction::Help => UserAction::list_actions(),
         UserAction::Quit => return Ok(0),
@@ -16,7 +16,7 @@ pub fn handle_action(ua: UserAction, repo: &library_core::Repository) -> Result<
     Ok(0)
 }
 
-fn add_lernset(repo: &library_core::Repository) -> Result<usize, std::io::Error> {
+fn add_lernset(repo: &library_core::Repository) -> Result<usize, library_core::core_error::CoreError> {
     let name = loop {
         println!("How would you like to name you lernset?");
         let mut lernset_name = String::new();
@@ -35,13 +35,17 @@ fn add_lernset(repo: &library_core::Repository) -> Result<usize, std::io::Error>
     Ok(0)
 }
 
-fn list_lernsets(repo: &library_core::Repository) -> Result<usize, std::io::Error> {
-    let lernsets = match repo.sqlite_lernset.list(repo) {
+fn list_lernsets(repo: &library_core::Repository) -> Result<usize, library_core::core_error::CoreError> {
+    let lernsets = match repo.sqlite_lernset.list() {
         Ok(lernsets) => lernsets,
         Err(err) => {
             println!("There was a problem when fetching the lernsets: {:?}", err);
-            return Err(std::io::Error);
+            return Err(err);
         }
-    };
+    }; 
+    println!("NAME \t ID");
+    for lernset in &lernsets {
+        println!("{} \t {}", lernset.name.trim(), lernset.lernset_id)
+    }
     Ok(0)
 }

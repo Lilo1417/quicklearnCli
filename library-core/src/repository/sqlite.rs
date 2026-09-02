@@ -73,7 +73,7 @@ impl LernsetRepository for SqliteLernsetRepository {
         Ok(())
     }
     fn list(&self) -> Result<Vec<Lernset>> {
-        let mut stmt = self.conn.prepare("SELECT id, name FROM lernset")?;
+        let mut stmt = self.conn.prepare("SELECT lernset_id, name FROM lernset")?;
         let lernset_iter = stmt.query_map([], |row| {
             let id: i32 = row.get(0)?;
             Ok(Lernset {
