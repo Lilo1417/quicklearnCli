@@ -1,7 +1,7 @@
-use std::io;
+use std::io::{self, Read};
 
 use crate::user_actions::{self, UserAction};
-use library_core::{self, LernsetRepository};
+use library_core::{self, LearnitemRepository, LernsetRepository};
 
 pub fn handle_action(ua: UserAction, repo: &library_core::Repository) -> Result<usize, library_core::core_error::CoreError> {
     match ua {
@@ -9,9 +9,9 @@ pub fn handle_action(ua: UserAction, repo: &library_core::Repository) -> Result<
         UserAction::Quit => return Ok(0),
         UserAction::AddLernset => return add_lernset(repo),
         UserAction::ListLernsets => return list_lernsets(repo),
-        UserAction::LearnLernset(_) => (),
-        UserAction::AddLearnitems(_) => (),
-        UserAction::ListLearnitems(_) => (),
+        UserAction::LearnLernset(id) => return learn_lernset(repo, id),
+        UserAction::AddLearnitems(id) => return add_learnitems(repo, id),
+        UserAction::ListLearnitems(id) => (),
     }
     Ok(0)
 }
@@ -49,3 +49,96 @@ fn list_lernsets(repo: &library_core::Repository) -> Result<usize, library_core:
     }
     Ok(0)
 }
+
+fn learn_lernset(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
+    todo!()
+}
+
+enum add_learn_opt {
+    single,
+    multiple,
+}
+
+fn add_learnitems(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
+    let option = loop {
+        println!("Would you like to add learnitems one after another[1] or multiple[2]?");
+        let mut opt = String::new();
+        match io::stdin().read_line(&mut opt) {
+            Ok(_) => match opt.as_str() {
+                "1" => break add_learn_opt::single,
+                "2" => break add_learn_opt::multiple,
+                _ => continue
+            }
+            Err(err) => {
+                println!("Please Input valid name. There was the following error: {}", err.to_string());
+                continue;
+            }
+        }
+    };
+
+    match option {
+        add_learn_opt::single => return add_single_learnitem(repo, id),
+        add_learn_opt::multiple => return add_multiple_learnitems(repo, id)
+    }
+}
+
+fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
+    loop {
+        let first_meaning = loop {
+            let mut str = String::new();
+            println!("Enter the first meaning of the lernset: ");
+            match io::stdin().read_line(&mut str) {
+                Ok(_) => break str,
+                Err(err) => {
+                    println!("Please Input valid string. There was the following error: {}", err.to_string());
+                    continue;
+                }
+            }
+        };
+        let second_meaning = loop {
+            let mut str = String::new();
+            println!("Enter the first meaning of the lernset: ");
+            match io::stdin().read_line(&mut str) {
+                Ok(_) => break str,
+                Err(err) => {
+                    println!("Please Input valid string. There was the following error: {}", err.to_string());
+                    continue;
+                }
+            }
+        };
+
+        repo.sqlite_learnitem.create(id, first_meaning, second_meaning, library_core::Learnstate::NotStarted);
+        let mut another = String::new();
+        loop {
+            println!("Would you like to add anotherone? [y/n]");
+            match io::stdin().read_line(&mut another) {
+                Ok(_) => match another.as_str() {
+                    "y" => break,
+                    "n" => return Ok(0),
+                    _ => {
+                        println!("Please enter y or n.");
+                        continue;
+                    }
+                }
+                Err(err) => {
+                    println!("There seems to have been a problem while reading you rinput: {}", err.to_string())
+                }
+            }
+        }
+    }
+}
+
+fn add_multiple_learnitems(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
+    let learnitems = loop {
+        let mut input = String::new();
+        println!("Please input your string of meanings with the format 'meaning_one meaning_two; '. To signal your finished press Ctrl+D on linux/macos or Ctrl+Z on Windows.");
+        match io::stdin().read_to_string(&mut input) {
+            Ok(_) => break input,
+            Err(err) => println!("There was a problem while reading you rinput: {}", err.to_string())
+        }
+    }.trim().split(";");
+
+    // handle the single learnitem from learnitems here
+    todo!()
+}
+
