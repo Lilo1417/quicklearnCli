@@ -64,7 +64,7 @@ fn add_learnitems(repo: &library_core::Repository, id: usize) -> Result<usize, l
         println!("Would you like to add learnitems one after another[1] or multiple[2]?");
         let mut opt = String::new();
         match io::stdin().read_line(&mut opt) {
-            Ok(_) => match opt.as_str() {
+            Ok(_) => match opt.as_str().trim() {
                 "1" => break add_learn_opt::single,
                 "2" => break add_learn_opt::multiple,
                 _ => continue
@@ -86,7 +86,7 @@ fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<us
     loop {
         let first_meaning = loop {
             let mut str = String::new();
-            println!("Enter the first meaning of the lernset: ");
+            println!("Enter the origininal meaning of the learnitem: ");
             match io::stdin().read_line(&mut str) {
                 Ok(_) => break str,
                 Err(err) => {
@@ -97,7 +97,7 @@ fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<us
         };
         let second_meaning = loop {
             let mut str = String::new();
-            println!("Enter the first meaning of the lernset: ");
+            println!("Enter the translated meaning of the learnitem: ");
             match io::stdin().read_line(&mut str) {
                 Ok(_) => break str,
                 Err(err) => {
@@ -107,12 +107,16 @@ fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<us
             }
         };
 
-        repo.sqlite_learnitem.create(id, first_meaning, second_meaning, library_core::Learnstate::NotStarted);
+        match repo.sqlite_learnitem.create(id, first_meaning, second_meaning, library_core::Learnstate::NotStarted) {
+            Ok(_) => (),
+            Err(err) => return Err(err)
+        };
+
         let mut another = String::new();
         loop {
             println!("Would you like to add anotherone? [y/n]");
             match io::stdin().read_line(&mut another) {
-                Ok(_) => match another.as_str() {
+                Ok(_) => match another.as_str().trim() {
                     "y" => break,
                     "n" => return Ok(0),
                     _ => {
@@ -129,16 +133,37 @@ fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<us
 }
 
 fn add_multiple_learnitems(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
-    let learnitems = loop {
+    let input = loop {
         let mut input = String::new();
         println!("Please input your string of meanings with the format 'meaning_one meaning_two; '. To signal your finished press Ctrl+D on linux/macos or Ctrl+Z on Windows.");
         match io::stdin().read_to_string(&mut input) {
             Ok(_) => break input,
             Err(err) => println!("There was a problem while reading you rinput: {}", err.to_string())
         }
-    }.trim().split(";");
+    };
+    let learnitems = input.trim().split(";");
 
-    // handle the single learnitem from learnitems here
-    todo!()
+    for li in learnitems {
+        let mut meanings = li.split(" ");
+        let origin_meaning = match meanings.next() {
+            Some(mean) => mean,
+            None => { 
+                println!("Please make sure to enter two meanings for every word and only split with the ; after both meanings.");
+                return Err(library_core::core_error::CoreError::Storage("Please make sure to get the formating correct".to_string()));
+            }
+        };
+        let trans_meaning = match meanings.next() {
+            Some(mean) => mean,
+            None => { 
+                println!("Please make sure to enter two meanings for every word and only split with the ; after both meanings.");
+                return Err(library_core::core_error::CoreError::Storage("Please make sure to get the formating correct".to_string()));
+            }
+        };
+        match repo.sqlite_learnitem.create(id, origin_meaning.to_string(), trans_meaning.to_string(), library_core::Learnstate::NotStarted) {
+            Ok(_) => (),
+            Err(err) => return Err(err)
+        }
+    }
+    Ok(0)
 }
 
