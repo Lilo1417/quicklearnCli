@@ -143,8 +143,13 @@ fn add_multiple_learnitems(repo: &library_core::Repository, id: usize) -> Result
     };
     let learnitems = input.trim().split(";");
 
+    let mut count = 0;
     for li in learnitems {
-        let mut meanings = li.split(" ");
+        if li.trim().is_empty() {
+            continue;
+        }
+
+        let mut meanings = li.split_whitespace();
         let origin_meaning = match meanings.next() {
             Some(mean) => mean,
             None => { 
@@ -163,7 +168,9 @@ fn add_multiple_learnitems(repo: &library_core::Repository, id: usize) -> Result
             Ok(_) => (),
             Err(err) => return Err(err)
         }
+        count+=1;
     }
+    println!("Finished adding {} learnitems.", count);
     Ok(0)
 }
 
