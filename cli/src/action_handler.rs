@@ -3,20 +3,22 @@ use std::io::{self, Read};
 use crate::user_actions::{self, UserAction};
 use library_core::{self, LearnitemRepository, LernsetRepository};
 
-pub fn handle_action(ua: UserAction, repo: &library_core::Repository) -> Result<usize, library_core::core_error::CoreError> {
+pub fn handle_action(ua: UserAction, repo: &library_core::Repository) -> Result<(), library_core::core_error::CoreError> {
     match ua {
         UserAction::Help => UserAction::list_actions(),
-        UserAction::Quit => return Ok(0),
+        UserAction::Quit => return Ok(()),
         UserAction::AddLernset => return add_lernset(repo),
+        UserAction::DeleteLernset(id) => return delete_lernset(repo, id),
         UserAction::ListLernsets => return list_lernsets(repo),
         UserAction::LearnLernset(id) => return learn_lernset(repo, id),
         UserAction::AddLearnitems(id) => return add_learnitems(repo, id),
-        UserAction::ListLearnitems(id) => (),
+        UserAction::ListLearnitems(id) => return list_learnitems(repo, id),
+        UserAction::DeleteLearnitem(id) => ()
     }
-    Ok(0)
+    Ok(())
 }
 
-fn add_lernset(repo: &library_core::Repository) -> Result<usize, library_core::core_error::CoreError> {
+fn add_lernset(repo: &library_core::Repository) -> Result<(), library_core::core_error::CoreError> {
     let name = loop {
         println!("How would you like to name you lernset?");
         let mut lernset_name = String::new();
@@ -32,10 +34,14 @@ fn add_lernset(repo: &library_core::Repository) -> Result<usize, library_core::c
         Ok(_) => println!("Lernset successflully created with name {}", name),
         Err(err) => println!("Something went wrong: {:?}", err)
     };
-    Ok(0)
+    Ok(())
 }
 
-fn list_lernsets(repo: &library_core::Repository) -> Result<usize, library_core::core_error::CoreError> {
+fn delete_lernset(repo: &library_core::Repository, lernset_id: usize) -> Result<(), library_core::core_error::CoreError> {
+    return repo.sqlite_learnitem.delete(lernset_id);
+}
+
+fn list_lernsets(repo: &library_core::Repository) -> Result<(), library_core::core_error::CoreError> {
     let lernsets = match repo.sqlite_lernset.list() {
         Ok(lernsets) => lernsets,
         Err(err) => {
@@ -47,10 +53,25 @@ fn list_lernsets(repo: &library_core::Repository) -> Result<usize, library_core:
     for lernset in &lernsets {
         println!("{} \t {}", lernset.name.trim(), lernset.lernset_id)
     }
-    Ok(0)
+    Ok(())
 }
 
-fn learn_lernset(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
+fn list_learnitems(repo: &library_core::Repository, lernset_id: usize) -> Result<(), library_core::core_error::CoreError> {
+    let learnitems = match repo.sqlite_learnitem.list_from_lernset(lernset_id) {
+        Ok(learnitems) => learnitems,
+        Err(err) => {
+            println!("There was a problem when fetching the lernsets: {:?}", err);
+            return Err(err);
+        }
+    };
+    println!("ID \t LERNSET-ID \t ORIGIN-MEANING \t TRANS-MEANING");
+    for learnitem in &learnitems {
+        println!("{} \t {} \t {} \t {}", learnitem.learnitem_id, learnitem.lernset_id, learnitem.origin_meaning.trim(), learnitem.trans_meaning.trim());
+    }
+    Ok(())
+}
+
+fn learn_lernset(repo: &library_core::Repository, id: usize) -> Result<(), library_core::core_error::CoreError> {
     todo!()
 }
 
@@ -59,7 +80,7 @@ enum add_learn_opt {
     multiple,
 }
 
-fn add_learnitems(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
+fn add_learnitems(repo: &library_core::Repository, id: usize) -> Result<(), library_core::core_error::CoreError> {
     let option = loop {
         println!("Would you like to add learnitems one after another[1] or multiple[2]?");
         let mut opt = String::new();
@@ -82,7 +103,7 @@ fn add_learnitems(repo: &library_core::Repository, id: usize) -> Result<usize, l
     }
 }
 
-fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
+fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<(), library_core::core_error::CoreError> {
     loop {
         let first_meaning = loop {
             let mut str = String::new();
@@ -118,7 +139,7 @@ fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<us
             match io::stdin().read_line(&mut another) {
                 Ok(_) => match another.as_str().trim() {
                     "y" => break,
-                    "n" => return Ok(0),
+                    "n" => return Ok(()),
                     _ => {
                         println!("Please enter y or n.");
                         continue;
@@ -132,7 +153,7 @@ fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<us
     }
 }
 
-fn add_multiple_learnitems(repo: &library_core::Repository, id: usize) -> Result<usize, library_core::core_error::CoreError> {
+fn add_multiple_learnitems(repo: &library_core::Repository, id: usize) -> Result<(), library_core::core_error::CoreError> {
     let input = loop {
         let mut input = String::new();
         println!("Please input your string of meanings with the format 'meaning_one meaning_two; '. To signal your finished press Ctrl+D on linux/macos or Ctrl+Z on Windows.");
@@ -171,6 +192,6 @@ fn add_multiple_learnitems(repo: &library_core::Repository, id: usize) -> Result
         count+=1;
     }
     println!("Finished adding {} learnitems.", count);
-    Ok(0)
+    Ok(())
 }
 

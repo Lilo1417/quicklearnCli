@@ -30,7 +30,10 @@ pub fn initate_programm(args: args::Args) -> Result<usize, std::io::Error> {
             break;
         }
         else {
-            action_handler::handle_action(action, &repo);
+            match action_handler::handle_action(action, &repo) {
+                Ok(_) => (),
+                Err(err) => println!("There seems to be a problem: {:?}", err)
+            }
         }
     }
     Ok(0)

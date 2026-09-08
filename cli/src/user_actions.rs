@@ -6,19 +6,23 @@ pub enum UserAction {
     Help,
     ListLernsets,
     AddLernset,
+    DeleteLernset(usize),
     LearnLernset(usize),
     ListLearnitems(usize),
     AddLearnitems(usize),
+    DeleteLearnitem(usize),
     Quit
 }
 
-pub const ALL: [UserAction; 7] = [
+pub const ALL: [UserAction; 9] = [
     UserAction::Help,
     UserAction::ListLernsets,
     UserAction::AddLernset,
+    UserAction::DeleteLernset(5),
     UserAction::LearnLernset(5),
     UserAction::ListLearnitems(5),
     UserAction::AddLearnitems(5),
+    UserAction::DeleteLearnitem(5),
     UserAction::Quit
 ];
 
@@ -27,9 +31,11 @@ impl UserAction {
         println!("help");
         println!("list-lernsets");
         println!("add-lernset");
+        println!("delete-lernset LERNSET_ID");
         println!("learn-lernset LERNSET_ID");
         println!("list-learnitems LERNSET_ID");
         println!("add-learnitems LERNSET_ID");
+        println!("delete-learnitem LEARNITEM_ID");
         println!("quit");
     }
 }
@@ -52,6 +58,13 @@ pub fn get_user_action() -> Result<UserAction, String> {
                 "help" => return Ok(UserAction::Help),
                 "list-lernsets" => return Ok(UserAction::ListLernsets),
                 "add-lernset" => return Ok(UserAction::AddLernset),
+                "delete-lernset" => {
+                    let second_input = match helpers::convert_str_usize(inputs.next()) {
+                        Ok(input) => input,
+                        Err(err) => return Err(err),
+                    };
+                    return Ok(UserAction::DeleteLernset(second_input))
+                }
                 "learn-lernset" => {
                     let second_input = match helpers::convert_str_usize(inputs.next()) {
                         Ok(input) => input,
@@ -73,6 +86,13 @@ pub fn get_user_action() -> Result<UserAction, String> {
                     };
                     return Ok(UserAction::AddLearnitems(second_input))
                 },
+                "delte-learnitem" => {
+                    let second_input = match helpers::convert_str_usize(inputs.next()) {
+                        Ok(input) => input,
+                        Err(err) => return Err(err),
+                    };
+                    return Ok(UserAction::DeleteLearnitem(second_input))
+                }
                 "quit" => return Ok(UserAction::Quit),
                 _ => return Err("Please enter a possible command. Type help for possible commands.".to_string())
             },
