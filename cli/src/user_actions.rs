@@ -1,5 +1,6 @@
 use std::io;
-use crate::helpers;
+use crate::{helpers, repl_helpers::ReplHelper};
+use rustyline::{Editor, history::DefaultHistory};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum UserAction {
@@ -40,16 +41,17 @@ impl UserAction {
     }
 }
 
-pub fn get_user_action() -> Result<UserAction, String> {
+pub fn get_user_action(r1: &mut Editor<ReplHelper, DefaultHistory>) -> Result<UserAction, String> {
     loop {
-        println!("What would you like to do? (help for all options)");
-        
-        let mut input = String::new();
-        match io::stdin().read_line(&mut input) {
-            Ok(_) => (),
+        let readline = r1.readline("What would you like to do? (help for all options) \n > ");
+
+        let input = match readline {
+            Ok(line) => {
+                let _ = r1.add_history_entry(line.as_str());
+                line
+            },
             Err(err) => return Err(err.to_string())
         };
-
 
         let mut inputs = input.split_whitespace();
         
@@ -59,39 +61,24 @@ pub fn get_user_action() -> Result<UserAction, String> {
                 "list-lernsets" => return Ok(UserAction::ListLernsets),
                 "add-lernset" => return Ok(UserAction::AddLernset),
                 "delete-lernset" => {
-                    let second_input = match helpers::convert_str_usize(inputs.next()) {
-                        Ok(input) => input,
-                        Err(err) => return Err(err),
-                    };
-                    return Ok(UserAction::DeleteLernset(second_input))
+                    let n = helpers::convert_str_usize(inputs.next())?;
+                    return Ok(UserAction::DeleteLernset(n))
                 }
                 "learn-lernset" => {
-                    let second_input = match helpers::convert_str_usize(inputs.next()) {
-                        Ok(input) => input,
-                        Err(err) => return Err(err),
-                    };
-                    return Ok(UserAction::LearnLernset(second_input))
+                    let n = helpers::convert_str_usize(inputs.next())?;
+                    return Ok(UserAction::LearnLernset(n))
                 }
                 "list-learnitems" => {
-                    let second_input = match helpers::convert_str_usize(inputs.next()) {
-                        Ok(input) => input,
-                        Err(err) => return Err(err),
-                    };
-                    return Ok(UserAction::ListLearnitems(second_input))
+                    let n = helpers::convert_str_usize(inputs.next())?;
+                    return Ok(UserAction::ListLearnitems(n))
                 }
                 "add-learnitems" => {
-                    let second_input = match helpers::convert_str_usize(inputs.next()) {
-                        Ok(input) => input,
-                        Err(err) => return Err(err),
-                    };
-                    return Ok(UserAction::AddLearnitems(second_input))
+                    let n = helpers::convert_str_usize(inputs.next())?;
+                    return Ok(UserAction::AddLearnitems(n))
                 },
                 "delte-learnitem" => {
-                    let second_input = match helpers::convert_str_usize(inputs.next()) {
-                        Ok(input) => input,
-                        Err(err) => return Err(err),
-                    };
-                    return Ok(UserAction::DeleteLearnitem(second_input))
+                    let n = helpers::convert_str_usize(inputs.next())?;
+                    return Ok(UserAction::DeleteLearnitem(n))
                 }
                 "quit" => return Ok(UserAction::Quit),
                 _ => return Err("Please enter a possible command. Type help for possible commands.".to_string())

@@ -7,3 +7,4 @@ edition = "2024"
 clap = { version = "4.6.6", features = ["derive"] }
 directories = "6.0.0"
 library-core = { path = "../library-core" }
+rustyline = { version = "18", features = ["derive"] }
