@@ -21,13 +21,14 @@ pub fn initate_programm(args: args::Args) -> Result<usize, std::io::Error> {
     let helper = ReplHelper {
         completer: CommandCompleter {
             commands: vec![
-                "help", "list-lernsets", "add-lernset",
-                "learn-lernset", "list-learnitems", "add-learnitems", "quit",
+                "help", "list-lernsets", "add-lernset", "delete-lernset",
+                "learn-lernset", "list-learnitems", "add-learnitems", "delete-learnitem", "quit",
             ],
         },
     };
 
     let mut r1: Editor<ReplHelper, DefaultHistory>  = Editor::new().expect("Failed to create init line editor");
+    r1.set_helper(Some(helper));
 
     loop {
         let action = match user_actions::get_user_action(&mut r1) {

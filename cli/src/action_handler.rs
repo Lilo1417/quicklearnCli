@@ -38,7 +38,19 @@ fn add_lernset(repo: &library_core::Repository) -> Result<(), library_core::core
 }
 
 fn delete_lernset(repo: &library_core::Repository, lernset_id: usize) -> Result<(), library_core::core_error::CoreError> {
-    return repo.sqlite_learnitem.delete(lernset_id);
+    println!("Enter 'DELETE'' to confirm.");
+    let mut input = String::new();
+    match io::stdin().read_line(&mut input) {
+        Ok(_) => match input.as_str().trim() {
+            "DELETE" => println!("Deleting lernset."),
+            _ => {
+                println!("NOT Deleting lernset.");
+                return Ok(())
+            }
+        },
+        Err(err) => return Err(library_core::core_error::CoreError::Storage(err.to_string()))
+    }
+    return repo.sqlite_lernset.delete(lernset_id);
 }
 
 fn list_lernsets(repo: &library_core::Repository) -> Result<(), library_core::core_error::CoreError> {
