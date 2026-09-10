@@ -1,4 +1,7 @@
+use crate::core_error::{self, Result};
+
 type RemLearns= usize;
+
 
 #[derive(Debug)]
 pub enum Learnstate {
@@ -30,4 +33,25 @@ pub struct Learnitem {
     pub origin_meaning: String,
     pub trans_meaning: String,
     pub learnstate: Learnstate,
+}
+
+impl Learnitem {
+    pub fn check_learnstate(mut self) -> Result<Self> {
+        match self.learnstate {
+            Learnstate::NotStarted => {
+                self.learnstate = Learnstate::Learning(4);
+                Ok(self)
+            },
+            Learnstate::Learning(mut rem) => {
+                rem -=1;
+                if rem>0 { 
+                    self.learnstate = Learnstate::Learning(rem);
+                } else {
+                    self.learnstate = Learnstate::Finished;
+                }
+                Ok(self)
+            },
+            Learnstate::Finished => Ok(self)
+        }
+    }
 }

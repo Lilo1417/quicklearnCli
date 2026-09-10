@@ -4,6 +4,7 @@ mod user_actions;
 mod helpers;
 mod action_handler;
 mod repl_helpers;
+mod learn;
 
 use rustyline::{Editor, history::DefaultHistory};
 
