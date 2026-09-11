@@ -1,4 +1,5 @@
 use std::io::{self, Read};
+use crate::learn;
 
 use crate::user_actions::{self, UserAction};
 use library_core::{self, LearnitemRepository, LernsetRepository};
@@ -84,7 +85,9 @@ fn list_learnitems(repo: &library_core::Repository, lernset_id: usize) -> Result
 }
 
 fn learn_lernset(repo: &library_core::Repository, id: usize) -> Result<(), library_core::core_error::CoreError> {
-    todo!()
+    let learnitems = repo.sqlite_learnitem.list_from_lernset(id)?;
+    learn::learn(learnitems);
+    Ok(())
 }
 
 enum add_learn_opt {

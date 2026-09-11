@@ -36,7 +36,7 @@ pub struct Learnitem {
 }
 
 impl Learnitem {
-    pub fn check_learnstate(mut self) -> Result<Self> {
+    pub fn update_learnstate(&mut self) -> Result<&Self> {
         match self.learnstate {
             Learnstate::NotStarted => {
                 self.learnstate = Learnstate::Learning(4);
