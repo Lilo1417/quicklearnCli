@@ -85,8 +85,8 @@ fn list_learnitems(repo: &library_core::Repository, lernset_id: usize) -> Result
 }
 
 fn learn_lernset(repo: &library_core::Repository, id: usize) -> Result<(), library_core::core_error::CoreError> {
-    let learnitems = repo.sqlite_learnitem.list_from_lernset(id)?;
-    learn::learn(learnitems);
+    let mut learnitems = repo.sqlite_learnitem.list_from_lernset(id)?;
+    learn::learn(&mut learnitems);
     Ok(())
 }
 

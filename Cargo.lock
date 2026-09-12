@@ -288,6 +288,7 @@ name = "library-core"
 version = "0.1.0"
 dependencies = [
  "rusqlite",
+ "rustyline",
 ]
 
 [[package]]
