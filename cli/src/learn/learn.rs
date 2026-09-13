@@ -1,15 +1,15 @@
-use library_core::{Learnitem, Learnstate, core_error};
+use library_core::{Learnitem, LearnitemRepository, Learnstate, core_error};
 use rustyline::{DefaultEditor, error::ReadlineError};
 
-pub fn learn(all_learnitems: &mut Vec<Learnitem>) -> Result<(), core_error::CoreError> {
+pub fn learn(repo: &library_core::Repository, all_learnitems: &mut Vec<Learnitem>) -> Result<(), core_error::CoreError> {
     loop {
-        let cur_indices = get_learnitems(all_learnitems)?;
+        let cur_indices = get_learnitems(repo, all_learnitems)?;
         for &idx in &cur_indices {
             let learned:Vec<&Learnitem> = all_learnitems.iter().filter(|li| matches!(li.learnstate, Learnstate::Finished)).collect();
             print!("\x1B[2J\x1B[H");
             println!("Learning Mode. \x1b[1m {}/{} \x1b[0m", learned.len(), all_learnitems.len());
             println!("=======================");
-            if learn_learnitem(&mut all_learnitems[idx])? {
+            if learn_learnitem(repo, &mut all_learnitems[idx])? {
                 return Ok(())
             };
         }
@@ -17,7 +17,7 @@ pub fn learn(all_learnitems: &mut Vec<Learnitem>) -> Result<(), core_error::Core
 }
 type Exit = bool;
 
-fn learn_learnitem(li: &mut Learnitem) -> Result<Exit, core_error::CoreError> {
+fn learn_learnitem(repo: &library_core::Repository, li: &mut Learnitem) -> Result<Exit, core_error::CoreError> {
     let mut rl = DefaultEditor::new().expect("Something went horribly wrong when gnerating rl");
 
     let prompt = format!(" \x1b[1m{} \x1b[0m (Ctrl+D to go back)\n > ", li.origin_meaning.trim());
@@ -30,6 +30,7 @@ fn learn_learnitem(li: &mut Learnitem) -> Result<Exit, core_error::CoreError> {
     if input.to_lowercase().trim()==li.trans_meaning.to_lowercase().trim() {
         println!("That's correct! Yay. Press enter to continue...");
         li.update_learnstate()?;
+        repo.sqlite_learnitem.update(li)?;
         let mut tmep = String::new();
         std::io::stdin().read_line(&mut tmep).unwrap();
     } else {
@@ -43,7 +44,7 @@ fn learn_learnitem(li: &mut Learnitem) -> Result<Exit, core_error::CoreError> {
     }
     Ok(false)
 }
-fn get_learnitems(all_learnitems: &mut Vec<Learnitem>) -> Result<Vec<usize>, core_error::CoreError> {
+fn get_learnitems(repo: &library_core::Repository, all_learnitems: &mut Vec<Learnitem>) -> Result<Vec<usize>, core_error::CoreError> {
     let learning_indeces: Vec<usize> = all_learnitems.iter()
         .enumerate()
         .filter(|(_, l)| matches!(&l.learnstate, Learnstate::Learning(_)))
@@ -61,6 +62,7 @@ fn get_learnitems(all_learnitems: &mut Vec<Learnitem>) -> Result<Vec<usize>, cor
 
         for &idx in not_started_indices.iter().take(10-a_learnitems) {
             all_learnitems[idx].update_learnstate()?;
+            repo.sqlite_learnitem.update(&all_learnitems[idx])?;
             cur_indices.push(idx);
         }
     }

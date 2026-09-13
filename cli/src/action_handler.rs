@@ -14,7 +14,7 @@ pub fn handle_action(ua: UserAction, repo: &library_core::Repository) -> Result<
         UserAction::LearnLernset(id) => return learn_lernset(repo, id),
         UserAction::AddLearnitems(id) => return add_learnitems(repo, id),
         UserAction::ListLearnitems(id) => return list_learnitems(repo, id),
-        UserAction::DeleteLearnitem(id) => ()
+        UserAction::DeleteLearnitem(id) => return delete_learnitem(repo, id)
     }
     Ok(())
 }
@@ -53,6 +53,9 @@ fn delete_lernset(repo: &library_core::Repository, lernset_id: usize) -> Result<
     }
     return repo.sqlite_lernset.delete(lernset_id);
 }
+fn delete_learnitem(repo: &library_core::Repository, learnitem_id: usize) -> Result<(), library_core::core_error::CoreError> {
+    return repo.sqlite_learnitem.delete(learnitem_id);
+}
 
 fn list_lernsets(repo: &library_core::Repository) -> Result<(), library_core::core_error::CoreError> {
     let lernsets = match repo.sqlite_lernset.list() {
@@ -77,16 +80,16 @@ fn list_learnitems(repo: &library_core::Repository, lernset_id: usize) -> Result
             return Err(err);
         }
     };
-    println!("ID \t LERNSET-ID \t ORIGIN-MEANING \t TRANS-MEANING");
+    println!("ID \t LERNSET-ID \t ORIGIN-MEANING \t TRANS-MEANING \t LEARNSTATE");
     for learnitem in &learnitems {
-        println!("{} \t {} \t {} \t {}", learnitem.learnitem_id, learnitem.lernset_id, learnitem.origin_meaning.trim(), learnitem.trans_meaning.trim());
+        println!("{} \t {} \t\t {} \t\t\t {}\t\t {}", learnitem.learnitem_id, learnitem.lernset_id, learnitem.origin_meaning.trim(), learnitem.trans_meaning.trim(), learnitem.learnstate);
     }
     Ok(())
 }
 
 fn learn_lernset(repo: &library_core::Repository, id: usize) -> Result<(), library_core::core_error::CoreError> {
     let mut learnitems = repo.sqlite_learnitem.list_from_lernset(id)?;
-    learn::learn(&mut learnitems);
+    learn::learn(repo, &mut learnitems)?;
     Ok(())
 }
 

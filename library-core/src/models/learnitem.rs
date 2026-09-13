@@ -1,3 +1,6 @@
+use core::fmt;
+use std::fmt::write;
+
 use crate::core_error::{self, Result};
 
 type RemLearns= usize;
@@ -22,6 +25,16 @@ impl Learnstate {
         match self {
             Learnstate::Learning(rem) => *rem,
             _ => 0
+        }
+    }
+}
+
+impl fmt::Display for Learnstate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Learnstate::Finished => write!(f, "Finished"),
+            Learnstate::NotStarted => write!(f, "Not started"),
+            Learnstate::Learning(rem) => write!(f, "Learning ({rem})")
         }
     }
 }
