@@ -1,2 +1,2 @@
 # quicklearn cli
-A cli project to learn vocabulary.
+Quicklearn Cli is a cli tool for learning vocabulary.
