@@ -10,14 +10,14 @@ use rustyline::{Editor, history::DefaultHistory};
 
 use user_actions::UserAction; 
 use crate::repl_helpers::{CommandCompleter, ReplHelper};
-use library_core::{self, core_error};
+use library_core::{self, core_error::CoreError};
 
 
-pub fn initate_programm(args: args::Args) -> Result<usize, std::io::Error> {
+pub fn initate_programm(args: args::Args) -> Result<usize, CoreError> {
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
     let path = path::get_path(args.database)?;
     println!("Connecting to: {:?}", path);
-    let repo = library_core::Repository::new(&path);
+    let repo = library_core::Repository::new(&path)?;
 
     let helper = ReplHelper {
         completer: CommandCompleter {

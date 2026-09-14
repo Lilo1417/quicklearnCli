@@ -1,45 +1,51 @@
 use std::path::PathBuf;
 
-use crate::{Learnitem, LearnitemRepository, Lernset, LernsetRepository, core_error::Result, db::open, models::Learnstate};
+use crate::{Learnitem, LearnitemRepository, Lernset, LernsetRepository, core_error::{CoreError, Result}, db::open, models::Learnstate};
 use rusqlite::{Connection, params};
 
 pub struct Repository {
-    pub sqlite_lernset: SqliteLernsetRepository,
-    pub sqlite_learnitem: SqlLiteLearnitemRepository,
-}
-impl Repository {
-    pub fn new(path: &PathBuf) -> Self {
-        Repository { sqlite_lernset: SqliteLernsetRepository::new(path), sqlite_learnitem: SqlLiteLearnitemRepository::new(path) }
-    }
-}
-pub struct SqliteLernsetRepository {
-    conn: Connection,
-}
-
-impl SqliteLernsetRepository {
-    pub fn new(path: &PathBuf) -> Self {
-        let conn = match open(&path) {
-            Ok(conn) => conn,
-            Err(err) => panic!("Erro while opening the connection: {}", err)
-        };
-        SqliteLernsetRepository { conn }
-    }
-}
-pub struct SqlLiteLearnitemRepository {
+    // pub sqlite_lernset: SqliteLernsetRepository,
+    // pub sqlite_learnitem: SqlLiteLearnitemRepository,
     conn: Connection
 }
-impl SqlLiteLearnitemRepository {
-    pub fn new(path: &PathBuf) -> Self {
+impl Repository {
+    pub fn new(path: &PathBuf) -> Result<Self> {
         let conn = match open(&path) {
             Ok(conn) => conn,
-            Err(err) => panic!("Erro while opening the connection: {}", err)
+            Err(err) => return Err(CoreError::Storage(err.to_string()))
         };
-        SqlLiteLearnitemRepository { conn }
+        Ok(Repository { conn })
+        // Ok(Repository { sqlite_lernset: SqliteLernsetRepository::new(path)?, sqlite_learnitem: SqlLiteLearnitemRepository::new(path)? })
     }
 }
+// pub struct SqliteLernsetRepository {
+//     conn: Connection,
+// }
+//
+// impl SqliteLernsetRepository {
+//     pub fn new(path: &PathBuf) -> Result<Self> {
+//         let conn = match open(&path) {
+//             Ok(conn) => conn,
+//             Err(err) => return Err(CoreError::Storage(err.to_string()))
+//         };
+//         Ok(SqliteLernsetRepository { conn })
+//     }
+// }
+// pub struct SqlLiteLearnitemRepository {
+//     conn: Connection
+// }
+// impl SqlLiteLearnitemRepository {
+//     pub fn new(path: &PathBuf) -> Result<Self> {
+//         let conn = match open(&path) {
+//             Ok(conn) => conn,
+//             Err(err) => return Err(CoreError::Storage(err.to_string()))
+//         };
+//         Ok(SqlLiteLearnitemRepository { conn })
+//     }
+// }
 
-impl LernsetRepository for SqliteLernsetRepository {
-    fn create(&self, name: &str) -> Result<crate::Lernset> {
+impl LernsetRepository for Repository {
+    fn create_lernset(&self, name: &str) -> Result<crate::Lernset> {
         self.conn.execute("INSERT INTO lernset (name) VALUES (?1)", params![name])?;
         
         let new_id = self.conn.last_insert_rowid();
@@ -48,7 +54,7 @@ impl LernsetRepository for SqliteLernsetRepository {
             name: name.to_string()
         })
     }
-    fn get(&self, id: usize) -> Result<Lernset> {
+    fn get_lernset(&self, id: usize) -> Result<Lernset> {
         Ok(self.conn.query_row(
             "SELECT lernset_id, name FROM lernset WHERE id = ?1",
             [id as i32],
@@ -60,7 +66,7 @@ impl LernsetRepository for SqliteLernsetRepository {
                 })
             })?)
     }
-    fn delete(&self, id: usize) -> Result<()> {
+    fn delete_lernset(&self, id: usize) -> Result<()> {
         let rows_affected = self.conn.execute(
         "DELETE FROM lernset WHERE lernset_id = ?1",
         [id as i64],
@@ -72,7 +78,7 @@ impl LernsetRepository for SqliteLernsetRepository {
 
         Ok(())
     }
-    fn list(&self) -> Result<Vec<Lernset>> {
+    fn list_lernsets(&self) -> Result<Vec<Lernset>> {
         let mut stmt = self.conn.prepare("SELECT lernset_id, name FROM lernset")?;
         let lernset_iter = stmt.query_map([], |row| {
             let id: i32 = row.get(0)?;
@@ -88,7 +94,7 @@ impl LernsetRepository for SqliteLernsetRepository {
         }
         Ok(lernsets)
     }
-    fn update(&self, lernset: &Lernset) -> Result<()> {
+    fn update_lernset(&self, lernset: &Lernset) -> Result<()> {
         let rows_affected = self.conn.execute(
             "UPDATE lernset  SET name = ?1 WHERE lernset_id = ?2", params![lernset.name, lernset.lernset_id as i64])?;
         if rows_affected == 0 {
@@ -98,8 +104,8 @@ impl LernsetRepository for SqliteLernsetRepository {
     }
 }
 
-impl LearnitemRepository for SqlLiteLearnitemRepository {
-    fn create(&self, lernset_id: usize, origin_meaning: String, trans_meaning: String, learnstate: crate::models::Learnstate) -> Result<crate::Learnitem> {
+impl LearnitemRepository for Repository {
+    fn create_learnitem(&self, lernset_id: usize, origin_meaning: String, trans_meaning: String, learnstate: crate::models::Learnstate) -> Result<crate::Learnitem> {
         let remaining = learnstate.remaining();
         let learnstate_str = learnstate.to_str();
         self.conn.execute("INSERT INTO learnitem (lernset_id, origin_meaning, trans_meaning, learnstate, remaining) VALUES (?1, ?2, ?3, ?4, ?5)", params![
@@ -118,13 +124,13 @@ impl LearnitemRepository for SqlLiteLearnitemRepository {
             learnstate
         })
     }
-    fn get(&self, learnitem_id: usize) -> Result<Learnitem> {
+    fn get_learnitem(&self, learnitem_id: usize) -> Result<Learnitem> {
        Ok(self.conn.query_row("SELECT learnitem_id, lernset_id, origin_meaning, trans_meaning, learnstate, remaining FROM learnitem WHERE learnitem_id = (?1)", 
             params![learnitem_id as i64],
             |row| {
                 let state: String = row.get(4)?;
                 let rem: Option<i64> = row.get(5)?;
-                let learnstate = SqlLiteLearnitemRepository::conv_state(state.as_str(), rem)?;
+                let learnstate = Repository::conv_state(state.as_str(), rem)?;
 
                 let lern_id: i64 = row.get(1)?;
                 Ok(Learnitem {
@@ -136,7 +142,7 @@ impl LearnitemRepository for SqlLiteLearnitemRepository {
                 })
         })?)
     }
-    fn delete(&self, id: usize) -> Result<()> {
+    fn delete_learnitem(&self, id: usize) -> Result<()> {
         let rows_affected = self.conn.execute(
             "DELETE FROM learnitem WHERE learnitem_id = ?1",
             [id as i64]
@@ -152,7 +158,7 @@ impl LearnitemRepository for SqlLiteLearnitemRepository {
             |row| {
                 let state: String = row.get(4)?;
                 let rem: Option<i64> = row.get(5)?;
-                let learnstate = SqlLiteLearnitemRepository::conv_state(state.as_str(), rem)?;
+                let learnstate = Repository::conv_state(state.as_str(), rem)?;
 
                 let row_learnitem_id: i64 = row.get(0)?;
                 let row_lernset_id: i64 = row.get(1)?;
@@ -167,7 +173,7 @@ impl LearnitemRepository for SqlLiteLearnitemRepository {
             })?;
         Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
     }
-    fn update(&self, learnitem: &Learnitem) -> Result<()> {
+    fn update_learnitem(&self, learnitem: &Learnitem) -> Result<()> {
         let remaining = learnitem.learnstate.remaining();
         let learnstate_str = learnitem.learnstate.to_str();
         let rows_affected = self.conn.execute(
@@ -180,7 +186,7 @@ impl LearnitemRepository for SqlLiteLearnitemRepository {
         Ok(())
     }
 }
-impl SqlLiteLearnitemRepository {
+impl Repository {
     fn conv_state(state: &str, rem: Option<i64>) -> rusqlite::Result<Learnstate> {
         match state {
             "Finished" => return Ok(Learnstate::Finished),

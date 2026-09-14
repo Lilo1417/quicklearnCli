@@ -19,3 +19,9 @@ impl From<ReadlineError> for CoreError {
         CoreError::Read(error)
     }
 }
+
+impl From<std::io::Error> for CoreError {
+    fn from(error: std::io::Error) -> Self {
+        CoreError::Storage(error.to_string())
+    }
+}

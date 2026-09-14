@@ -31,7 +31,7 @@ fn add_lernset(repo: &library_core::Repository) -> Result<(), library_core::core
             }
         }
     };
-    match repo.sqlite_lernset.create(&name) {
+    match repo.create_lernset(&name) {
         Ok(_) => println!("Lernset successflully created with name {}", name),
         Err(err) => println!("Something went wrong: {:?}", err)
     };
@@ -51,14 +51,14 @@ fn delete_lernset(repo: &library_core::Repository, lernset_id: usize) -> Result<
         },
         Err(err) => return Err(library_core::core_error::CoreError::Storage(err.to_string()))
     }
-    return repo.sqlite_lernset.delete(lernset_id);
+    return repo.delete_lernset(lernset_id);
 }
 fn delete_learnitem(repo: &library_core::Repository, learnitem_id: usize) -> Result<(), library_core::core_error::CoreError> {
-    return repo.sqlite_learnitem.delete(learnitem_id);
+    return repo.delete_learnitem(learnitem_id);
 }
 
 fn list_lernsets(repo: &library_core::Repository) -> Result<(), library_core::core_error::CoreError> {
-    let lernsets = match repo.sqlite_lernset.list() {
+    let lernsets = match repo.list_lernsets() {
         Ok(lernsets) => lernsets,
         Err(err) => {
             println!("There was a problem when fetching the lernsets: {:?}", err);
@@ -73,7 +73,7 @@ fn list_lernsets(repo: &library_core::Repository) -> Result<(), library_core::co
 }
 
 fn list_learnitems(repo: &library_core::Repository, lernset_id: usize) -> Result<(), library_core::core_error::CoreError> {
-    let learnitems = match repo.sqlite_learnitem.list_from_lernset(lernset_id) {
+    let learnitems = match repo.list_from_lernset(lernset_id) {
         Ok(learnitems) => learnitems,
         Err(err) => {
             println!("There was a problem when fetching the lernsets: {:?}", err);
@@ -88,7 +88,7 @@ fn list_learnitems(repo: &library_core::Repository, lernset_id: usize) -> Result
 }
 
 fn learn_lernset(repo: &library_core::Repository, id: usize) -> Result<(), library_core::core_error::CoreError> {
-    let mut learnitems = repo.sqlite_learnitem.list_from_lernset(id)?;
+    let mut learnitems = repo.list_from_lernset(id)?;
     learn::learn(repo, &mut learnitems)?;
     Ok(())
 }
@@ -146,7 +146,7 @@ fn add_single_learnitem(repo: &library_core::Repository, id: usize) -> Result<()
             }
         };
 
-        match repo.sqlite_learnitem.create(id, first_meaning, second_meaning, library_core::Learnstate::NotStarted) {
+        match repo.create_learnitem(id, first_meaning, second_meaning, library_core::Learnstate::NotStarted) {
             Ok(_) => (),
             Err(err) => return Err(err)
         };
@@ -203,7 +203,7 @@ fn add_multiple_learnitems(repo: &library_core::Repository, id: usize) -> Result
                 return Err(library_core::core_error::CoreError::Storage("Please make sure to get the formating correct".to_string()));
             }
         };
-        match repo.sqlite_learnitem.create(id, origin_meaning.to_string(), trans_meaning.to_string(), library_core::Learnstate::NotStarted) {
+        match repo.create_learnitem(id, origin_meaning.to_string(), trans_meaning.to_string(), library_core::Learnstate::NotStarted) {
             Ok(_) => (),
             Err(err) => return Err(err)
         }

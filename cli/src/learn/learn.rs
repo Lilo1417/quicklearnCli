@@ -30,7 +30,7 @@ fn learn_learnitem(repo: &library_core::Repository, li: &mut Learnitem) -> Resul
     if input.to_lowercase().trim()==li.trans_meaning.to_lowercase().trim() {
         println!("That's correct! Yay. Press enter to continue...");
         li.update_learnstate()?;
-        repo.sqlite_learnitem.update(li)?;
+        repo.update_learnitem(li)?;
         let mut tmep = String::new();
         std::io::stdin().read_line(&mut tmep).unwrap();
     } else {
@@ -62,7 +62,7 @@ fn get_learnitems(repo: &library_core::Repository, all_learnitems: &mut Vec<Lear
 
         for &idx in not_started_indices.iter().take(10-a_learnitems) {
             all_learnitems[idx].update_learnstate()?;
-            repo.sqlite_learnitem.update(&all_learnitems[idx])?;
+            repo.update_learnitem(&all_learnitems[idx])?;
             cur_indices.push(idx);
         }
     }
