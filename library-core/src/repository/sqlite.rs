@@ -56,7 +56,7 @@ impl LernsetRepository for Repository {
     }
     fn get_lernset(&self, id: usize) -> Result<Lernset> {
         Ok(self.conn.query_row(
-            "SELECT lernset_id, name FROM lernset WHERE id = ?1",
+            "SELECT lernset_id, name FROM lernset WHERE lernset_id = ?1",
             [id as i32],
             |row| {
                 let id: i64 = row.get(0)?;

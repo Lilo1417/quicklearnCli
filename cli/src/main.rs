@@ -7,6 +7,6 @@ fn main() {
     let args = Args::parse();
     match initate_programm(args) {
         Ok(_) => (),
-        Err(err) => 
+        Err(err) => println!("There seems to be a problem: {}", err)
     }
 }

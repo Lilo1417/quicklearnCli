@@ -1,7 +1,7 @@
 use core::fmt;
 use std::fmt::write;
 
-use crate::core_error::{self, Result};
+use crate::core_error::{self, CoreError, Result};
 
 type RemLearns= usize;
 
@@ -55,12 +55,14 @@ impl Learnitem {
                 self.learnstate = Learnstate::Learning(4);
                 Ok(self)
             },
-            Learnstate::Learning(mut rem) => {
-                rem -=1;
-                if rem>0 { 
-                    self.learnstate = Learnstate::Learning(rem);
-                } else {
+            Learnstate::Learning(rem) => {
+                if rem<=0 {
+                    return Err(CoreError::Learning("A learnitem with less then 1 remaining learn go entered.".to_string()))
+                }
+                if rem==1 { 
                     self.learnstate = Learnstate::Finished;
+                } else {
+                    self.learnstate = Learnstate::Learning(rem-1);
                 }
                 Ok(self)
             },

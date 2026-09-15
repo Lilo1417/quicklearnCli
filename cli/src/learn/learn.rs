@@ -4,6 +4,10 @@ use rustyline::{DefaultEditor, error::ReadlineError};
 pub fn learn(repo: &library_core::Repository, all_learnitems: &mut Vec<Learnitem>) -> Result<(), core_error::CoreError> {
     loop {
         let cur_indices = get_learnitems(repo, all_learnitems)?;
+        if cur_indices.len() ==0 {
+            println!("Finished Learning. Congrats!!!");
+            return Ok(())
+        }
         for &idx in &cur_indices {
             let learned:Vec<&Learnitem> = all_learnitems.iter().filter(|li| matches!(li.learnstate, Learnstate::Finished)).collect();
             print!("\x1B[2J\x1B[H");
